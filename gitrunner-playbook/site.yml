@@ -1,0 +1,39 @@
+- hosts: wordpress
+  become: true
+    
+  tasks: 
+    - name: set script vars 
+      set_fact:
+        runner_token: "98765432109876543210"
+        gitlab_repository_installation_script_url: "https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh"
+  
+    - name: Download GitLab repository installation script.
+      get_url:
+        url: "{{ gitlab_repository_installation_script_url }}"
+        dest: /tmp/gitlab_install_repository.sh
+  
+    - name: Install GitLab repository.
+      command: bash /tmp/gitlab_install_repository.sh
+  
+    -  name: Install GitLab runner
+       apt:
+        name: "gitlab-runner"
+        state: present
+  
+    - name: register runner
+      command: gitlab-runner register -n --url http://git --registration-token {{ runner_token }} --executor shell --description "Shell Runner"  --locked false --access-level not_protected
+  
+    - name: Add gitlab-runner user to sudoers
+      user:
+        name=gitlab-runner
+        groups=sudo
+        append=yes
+        state=present
+
+    - name: Allow gitlab-runner user to have passwordless sudo
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        regexp: '^gitlab-runner'
+        line: 'gitlab-runner ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'

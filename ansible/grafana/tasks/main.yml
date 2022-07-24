@@ -1,0 +1,41 @@
+---
+# tasks file for grafana
+- name: Install grafana
+  yum:
+    name: "https://dl.grafana.com/oss/release/grafana-{{ version }}-1.x86_64.rpm"
+    state: latest
+
+- name: "Grafana configuration file copy"
+  template:
+    src: "grafana.conf.j2"
+    dest: /etc/grafana/grafana.ini
+  notify: restart grafana
+
+- name: "Grafana server started"
+  service:
+    name: grafana-server
+    enabled: true
+    state: started
+
+- name: "Check if Grafana is accessible."
+  uri:
+    url: http://127.0.0.1:3000
+    method: GET
+    status_code: 200
+
+- name: Create/Update datasources file (provisioning)
+  become: true
+  copy:
+    dest: "/etc/grafana/provisioning/datasources/ansible.yml"
+    content: |
+      apiVersion: 1
+      deleteDatasources: []
+      datasources:
+      {{ grafana_datasources | to_nice_yaml }}
+    backup: false
+    owner: root
+    group: grafana
+    mode: 0640
+  notify: restart grafana
+  
+- import_tasks: dashboard.yml

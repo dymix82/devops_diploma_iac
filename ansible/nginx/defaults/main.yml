@@ -1,0 +1,4 @@
+---
+# defaults file for nginx
+letsencrypt_staging: true
+nginx_user: nginx

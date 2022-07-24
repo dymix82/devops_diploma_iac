@@ -1,0 +1,47 @@
+---
+# tasks file for gitlab
+- name: Check if GitLab configuration file already exists.
+  stat: path=/etc/gitlab/gitlab.rb
+  register: gitlab_config_file
+
+- name: Check if GitLab is already installed.
+  stat: path=/usr/bin/gitlab-ctl
+  register: gitlab_file
+
+- name: Get gitlab repo scritp
+  ansible.builtin.get_url:
+    url: "{{ gitlab_repository_installation_script_url }}"
+    dest: "./script.deb.sh"
+  when: not gitlab_file.stat.exists
+
+- name: Changing perm of "/foo/bar.sh", adding "+x"
+  file: dest=./script.deb.sh mode=a+x
+  when: not gitlab_file.stat.exists
+
+- name: Run a script
+  ansible.builtin.shell: ./script.deb.sh
+  args:
+    executable: /bin/bash
+  when: not gitlab_file.stat.exists
+
+- name: Install GitLab
+  yum:
+      name: "{{ gitlab_edition }}"
+      state: present
+  when: not gitlab_file.stat.exists
+
+- name: "Copy GitLab settings"
+  become: true
+  ansible.builtin.template:
+    backup: true
+    src: "templates/gitlab.rb.j2"
+    dest: "/etc/gitlab/gitlab.rb"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+- name: "Reconfigure Gitlab"
+  ansible.builtin.command:
+        cmd: "gitlab-ctl reconfigure"
+  async: 300
+  poll: 0
+  changed_when: false

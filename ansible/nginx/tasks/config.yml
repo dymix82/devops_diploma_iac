@@ -1,0 +1,11 @@
+- name: Replace nginx.conf
+  template:
+    src=templates/nginx.conf
+    dest=/etc/nginx/nginx.conf
+
+- name: Add virtual domain
+  template:
+    src=templates/vhosts.conf
+    dest=/etc/nginx/conf.d/{{ virtual_domain }}.conf
+  notify:
+    - nginx restart

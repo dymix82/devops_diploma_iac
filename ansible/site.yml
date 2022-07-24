@@ -1,0 +1,27 @@
+- hosts: proxy
+  become: true
+  roles:
+    - nginx
+- hosts: all
+  become: true
+  roles:
+    - update
+    - nodeexporter
+- hosts: git
+  become: true
+  roles:
+    - gitlab
+- hosts: db
+  become: true
+  roles:
+    - mysql
+- hosts: wordpress
+  become: true
+  roles:
+    - wordpress
+- hosts: mon
+  become: true
+  roles:
+    - monitoring
+    - grafana
+    - alertmanager

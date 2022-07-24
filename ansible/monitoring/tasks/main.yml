@@ -1,0 +1,3 @@
+---
+# tasks file for monitoring
+- import_tasks: prometheus.yml

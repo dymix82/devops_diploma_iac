@@ -1,0 +1,8 @@
+---
+# defaults file for monitoring
+userId: "prometheus"
+groupId: "prometheus"
+version: "2.37.0"
+exec_command: "/usr/local/bin/prometheus --config.file=/etc/prometheus/prometheus.conf --storage.tsdb.path=/data/prometheus --storage.tsdb.retention=2d"
+serviceName: "prometheus"
+prometheus_config_dir: /etc/prometheus

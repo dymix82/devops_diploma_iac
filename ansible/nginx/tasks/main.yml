@@ -1,0 +1,44 @@
+---
+- name: Add epel-release repo
+  yum:
+      name: epel-release
+      state: present
+
+- name: Install nginx
+  yum:
+      name: nginx
+      state: present
+  notify:
+      - nginx systemd
+
+- name: Create Iptables NAT chain
+  iptables:
+    table: nat
+    chain: POSTROUTING
+    out_interface: 'eth0'
+    jump: MASQUERADE
+
+- name: Enable IPv4 forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: 1
+    state: present
+    reload: True
+- name: Install certbot
+  yum:
+      name: certbot-nginx
+      state: present
+
+- name: Set httpd_can_network_connect flag on and keep it persistent across reboots
+  ansible.posix.seboolean:
+    name: httpd_can_network_connect
+    state: yes
+    persistent: yes
+
+- name: Start NGiNX
+  service:
+   name: nginx
+   state: restarted
+
+- import_tasks: certbot.yml
+- import_tasks: config.yml

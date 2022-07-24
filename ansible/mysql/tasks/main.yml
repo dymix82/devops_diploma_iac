@@ -1,0 +1,73 @@
+- name: Install the mysql packages
+  apt:
+    name:
+      - "{{ item }}"
+    state: present
+  with_items:
+    - "{{ mysql_packages }}"
+- name: Replace master.cnf
+  template:
+    src=templates/master.cnf.j2
+    dest=/etc/mysql/mysql.conf.d/mysqld.cnf
+  when:
+    - mysql_replication_role == 'master'
+  notify:
+    - restart mysql
+
+- name: Replace slave.cnf
+  template:
+    src=templates/slave.cnf.j2
+    dest=/etc/mysql/mysql.conf.d/mysqld.cnf
+  when:
+    - mysql_replication_role == 'slave'
+  notify:
+    - restart mysql
+
+- name: Start the mysql services
+  service:
+    name: "{{ mysql_service }}"
+    state: restarted
+    enabled: yes
+- name: Ensure anonymous users are not in the database
+  mysql_user:
+    name: ''
+    host: "{{ item }}"
+    state: absent
+  with_items:
+   - localhost
+   - "{{ ansible_hostname }}"
+- name: Remove the test database
+  mysql_db:
+    name: test
+    state: absent
+- name: Create the database
+  mysql_db:
+    name: "{{ item.name }}"
+    collation: "{{ item.collation }}"
+    encoding: "{{ item.encoding }}"
+    state: present
+  with_items:
+    - "{{ mysql_db }}"
+  when: mysql_db|lower() != 'none'
+  notify: restart mysql
+
+- name: Create the database users
+  mysql_user:
+    name: "{{ item.name }}"
+    password: "{{ item.pass }}"
+    priv: "{{ item.priv|default('*.*:ALL') }}"
+    state: present
+    host: "%"
+  with_items:
+    - "{{ mysql_users }}"
+  when: mysql_users|lower() != 'none'
+- block:
+  - name: Ensure new engines started
+    service:
+      name: "{{ item.service }}"
+      state: started
+      enabled: yes
+    with_items:
+      - "{{ mysql_engines }}"
+
+- import_tasks: replication.yml

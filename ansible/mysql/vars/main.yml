@@ -1,0 +1,9 @@
+---
+# vars file for mysql
+mysql_packages:
+    - mysql-server
+    - mysql-client
+    - python3-mysqldb
+    - libmysqlclient-dev
+mysql_service: mysql
+mysql_conf_dir: "/etc/mysql"

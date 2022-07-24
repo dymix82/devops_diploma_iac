@@ -1,0 +1,44 @@
+---
+proxy:
+  hosts:
+    alertmanager.gavva.site:
+      ansible_connection: ssh
+      ansible_user: centos
+      ansible_ssh_extra_args: "-o StrictHostKeyChecking=no"
+      virtual_domain: gavva.site
+db:
+  hosts:
+    db01.gavva.site:
+      ansible_connection: ssh
+      ansible_user: ubuntu
+      ansible_ssh_extra_args: "-o StrictHostKeyChecking=no -J centos@gavva.site"
+      mysql_replication_role: 'master'
+
+    db02.gavva.site:
+      ansible_connection: ssh
+      ansible_user: ubuntu
+      ansible_ssh_extra_args: "-o StrictHostKeyChecking=no -J centos@gavva.site"
+      mysql_replication_role: 'slave'
+
+wordpress:
+  hosts:
+    app.gavva.site:
+      ansible_connection: ssh
+      ansible_user: ubuntu
+      ansible_ssh_extra_args: "-o StrictHostKeyChecking=no -J centos@gavva.site"
+      virtual_domain: gavva.site
+
+git:
+  hosts:
+    git.gavva.site:
+      ansible_connection: ssh
+      ansible_user: centos
+      ansible_ssh_extra_args: "-o ControlPersist=7200s -o ServerAliveInterval=60 -o StrictHostKeyChecking=no -J centos@gavva.site"
+      virtual_domain: gavva.site
+
+mon:
+  hosts:
+    monitoring.gavva.site:
+      ansible_connection: ssh
+      ansible_user: centos
+      ansible_ssh_extra_args: "-o StrictHostKeyChecking=no -J centos@gavva.site"
